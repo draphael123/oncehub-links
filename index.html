@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provider Scheduling Directory</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2235;
+            --bg-card-hover: #232d42;
+            --accent: #22d3ee;
+            --accent-glow: rgba(34, 211, 238, 0.15);
+            --accent-secondary: #a78bfa;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #2d3a52;
+            --success: #34d399;
+            --warning: #fbbf24;
+            --disabled: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .bg-pattern::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(34, 211, 238, 0.08), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 20%, rgba(167, 139, 250, 0.06), transparent),
+                radial-gradient(ellipse 50% 30% at 50% 80%, rgba(34, 211, 238, 0.04), transparent);
+            animation: bgMove 20s ease-in-out infinite;
+        }
+
+        @keyframes bgMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, 1%) rotate(1deg); }
+            66% { transform: translate(-1%, 2%) rotate(-1deg); }
+        }
+
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse 100% 60% at 50% 0%, black, transparent);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 3rem 0 4rem;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 0 40px var(--accent-glow),
+                0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 40px var(--accent-glow), 0 10px 40px rgba(0, 0, 0, 0.3); }
+            50% { box-shadow: 0 0 60px var(--accent-glow), 0 10px 40px rgba(0, 0, 0, 0.3); }
+        }
+
+        .logo-icon svg {
+            width: 44px;
+            height: 44px;
+            fill: white;
+        }
+
+        h1 {
+            font-family: 'Sora', sans-serif;
+            font-size: 2.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.15rem;
+            font-weight: 300;
+        }
+
+        /* Search */
+        .search-container {
+            max-width: 500px;
+            margin: 0 auto 3rem;
+            position: relative;
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            color: var(--text-muted);
+            pointer-events: none;
+            transition: color 0.3s ease;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1.25rem 1rem 3.25rem;
+            font-size: 1rem;
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        .search-input:focus + .search-icon,
+        .search-input:not(:placeholder-shown) + .search-icon {
+            color: var(--accent);
+        }
+
+        .search-count {
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .search-count span {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Provider Grid */
+        .providers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.25rem;
+        }
+
+        /* Provider Card */
+        .provider-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .provider-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .provider-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                0 0 30px var(--accent-glow);
+        }
+
+        .provider-card:hover::before {
+            opacity: 1;
+        }
+
+        .provider-card.disabled {
+            opacity: 0.6;
+        }
+
+        .provider-card.disabled:hover {
+            border-color: var(--disabled);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                0 0 20px rgba(239, 68, 68, 0.15);
+        }
+
+        .provider-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .provider-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Sora', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .provider-name {
+            font-family: 'Sora', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .provider-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+
+        .status-dot.disabled {
+            background: var(--disabled);
+        }
+
+        .status-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .book-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.875rem 1.25rem;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #06b6d4);
+            color: var(--bg-primary);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .book-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(34, 211, 238, 0.3);
+        }
+
+        .book-btn svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        .book-btn:hover svg {
+            transform: translateX(4px);
+        }
+
+        .book-btn.disabled {
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* No results */
+        .no-results {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .no-results-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1.5rem;
+            color: var(--text-muted);
+        }
+
+        .no-results h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 4rem 0 2rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+
+        footer a:hover {
+            opacity: 0.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+            }
+
+            header {
+                padding: 2rem 0 3rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .providers-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern">
+        <div class="grid-overlay"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+            </div>
+            <h1>Provider Scheduling</h1>
+            <p class="subtitle">Book an appointment with one of our providers</p>
+        </header>
+
+        <div class="search-container">
+            <div class="search-wrapper">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="searchInput" 
+                    placeholder="Search providers..."
+                    autocomplete="off"
+                >
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+            <p class="search-count">Showing <span id="resultCount">25</span> of <span>25</span> providers</p>
+        </div>
+
+        <div class="providers-grid" id="providersGrid">
+            <!-- Cards will be inserted here by JavaScript -->
+        </div>
+
+        <div class="no-results" id="noResults" style="display: none;">
+            <svg class="no-results-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3>No providers found</h3>
+            <p>Try adjusting your search term</p>
+        </div>
+
+        <footer>
+            <p>Powered by <a href="https://www.oncehub.com" target="_blank" rel="noopener">OnceHub</a></p>
+        </footer>
+    </div>
+
+    <script>
+        const providers = [
+            { name: "Alexis Foster-Horton", link: "https://go.oncehub.com/AlexisFoster-Horton", disabled: false },
+            { name: "Ashley Escoe", link: "https://go.oncehub.com/AshleyEscoe", disabled: false },
+            { name: "Ashley Grout", link: "https://go.oncehub.com/AshleyGrout", disabled: false },
+            { name: "Bill Carbonneau", link: "https://go.oncehub.com/FountainBill", disabled: false },
+            { name: "Bryana Anderson", link: "https://go.oncehub.com/BryanaAnderson", disabled: false },
+            { name: "Bryce Amos", link: "https://go.oncehub.com/BryceAmos", disabled: false },
+            { name: "Catherine Herrington", link: "https://go.oncehub.com/CatherineHerrington", disabled: false },
+            { name: "Danielle Board", link: "https://go.oncehub.com/DanielleBoard", disabled: false },
+            { name: "Deanna Maher", link: "https://go.oncehub.com/DeAnnaMaher", disabled: false },
+            { name: "Doron Stember", link: "https://go.oncehub.com/FountainDoron", disabled: false },
+            { name: "Jacquelyn Sexton", link: "https://go.oncehub.com/JacquelynSexton", disabled: false },
+            { name: "Lindsay Burden", link: "https://go.oncehub.com/LindsayBurden", disabled: false },
+            { name: "Liz Gloor", link: "https://go.oncehub.com/LizGloor", disabled: false },
+            { name: "Martin Van Dongen", link: "https://go.oncehub.com/MartinVanDongen", disabled: false },
+            { name: "Megan Ryan-Riffle", link: "https://go.oncehub.com/MeganRyan-Riffle", disabled: false },
+            { name: "Michele Foster", link: "https://go.oncehub.com/MicheleFoster", disabled: false },
+            { name: "Priya Chaudhari", link: "https://go.oncehub.com/PriyaChaudhari", disabled: false },
+            { name: "Rachel Razi", link: "https://go.oncehub.com/rachelrazi", disabled: false },
+            { name: "Skye Sauls", link: "https://go.oncehub.com/SkyeSauls", disabled: false },
+            { name: "Summer Denny", link: "https://go.oncehub.com/SummerDenny", disabled: false },
+            { name: "Terray Humphrey", link: "https://go.oncehub.com/DariusHumphrey", disabled: false },
+            { name: "Timothy Mack", link: "https://go.oncehub.com/TimothyMack", disabled: false },
+            { name: "Tzvi Doron", link: "https://go.oncehub.com/TzviDoron", disabled: true },
+            { name: "Victor Lopez", link: "https://go.oncehub.com/FountainVictorL", disabled: false },
+            { name: "Vivien Lee", link: "https://go.oncehub.com/VivienLee", disabled: false }
+        ];
+
+        function getInitials(name) {
+            return name.split(' ')
+                .map(part => part.charAt(0))
+                .slice(0, 2)
+                .join('')
+                .toUpperCase();
+        }
+
+        function createProviderCard(provider, index) {
+            const card = document.createElement('div');
+            card.className = `provider-card${provider.disabled ? ' disabled' : ''}`;
+            card.style.animationDelay = `${index * 0.05}s`;
+
+            card.innerHTML = `
+                <div class="provider-header">
+                    <div class="provider-avatar">${getInitials(provider.name)}</div>
+                    <div class="provider-name">${provider.name}</div>
+                </div>
+                <div class="provider-status">
+                    <div class="status-dot${provider.disabled ? ' disabled' : ''}"></div>
+                    <span class="status-text">${provider.disabled ? 'Booking unavailable' : 'Available for booking'}</span>
+                </div>
+                <a href="${provider.link}" 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   class="book-btn${provider.disabled ? ' disabled' : ''}"
+                   ${provider.disabled ? 'tabindex="-1"' : ''}>
+                    ${provider.disabled ? 'Currently Unavailable' : 'Schedule Appointment'}
+                    ${!provider.disabled ? `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>` : ''}
+                </a>
+            `;
+
+            return card;
+        }
+
+        function renderProviders(filteredProviders) {
+            const grid = document.getElementById('providersGrid');
+            const noResults = document.getElementById('noResults');
+            const resultCount = document.getElementById('resultCount');
+
+            grid.innerHTML = '';
+
+            if (filteredProviders.length === 0) {
+                noResults.style.display = 'block';
+                grid.style.display = 'none';
+            } else {
+                noResults.style.display = 'none';
+                grid.style.display = 'grid';
+                
+                filteredProviders.forEach((provider, index) => {
+                    grid.appendChild(createProviderCard(provider, index));
+                });
+            }
+
+            resultCount.textContent = filteredProviders.length;
+        }
+
+        // Initial render
+        renderProviders(providers);
+
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            
+            if (query === '') {
+                renderProviders(providers);
+            } else {
+                const filtered = providers.filter(provider => 
+                    provider.name.toLowerCase().includes(query)
+                );
+                renderProviders(filtered);
+            }
+        });
+    </script>
+</body>
+</html>
+
